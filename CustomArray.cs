@@ -1,73 +1,37 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq; 
 
-// Определение обобщенного класса CustomArray<T>, который поддерживает итерацию через IEnumerable<T>
-public class CustomArray<T> : IEnumerable<T>
+public class CustomArray<T> : IEnumerable<T> where T : IComparable<T>
 {
-    private T[] _items; // Внутреннее хранилище элементов
-    private int _count = 0; // Количество элементов в массиве
+    private T[] _items;
+    private int _count = 0;
 
-    // Конструктор по умолчанию задает начальную емкость массива равной 4
     public CustomArray() : this(4) { }
 
-    // Конструктор с параметром для задания начальной емкости массива
     public CustomArray(int capacity)
     {
         _items = new T[capacity];
     }
 
-    // Добавление элемента в массив
     public void Add(T item)
     {
-        // Если достигнута текущая емкость массива, увеличиваем емкость
         if (_count == _items.Length)
         {
             IncreaseCapacity();
         }
-        // Добавление нового элемента и увеличение счетчика элементов
         _items[_count++] = item;
     }
 
-    // Внутренний метод для увеличения емкости массива
+    // Увеличивает вместимость массива, когда необходимо добавить новый элемент
     private void IncreaseCapacity()
     {
-        // Новая емкость определяется как 2n + 1
-        int newCapacity = _items.Length * 2 + 1;
-        // Создание нового массива с увеличенной емкостью
-        T[] newArray = new T[newCapacity];
-        // Копирование элементов из старого массива в новый
-        Array.Copy(_items, newArray, _count);
-        // Обновление ссылки на внутренний массив
-        _items = newArray;
+        T[] newArray = new T[_items.Length * 2 + 1]; // Создаем новый массив с удвоенной вместимостью
+        _items.CopyTo(newArray, 0); // Копируем элементы в новый массив
+        _items = newArray; // Обновляем ссылку на массив
     }
 
-    // Удаление элемента из массива
-    public bool Remove(T item)
-    {
-        // Поиск элемента для удаления
-        int index = Array.IndexOf(_items, item, 0, _count);
-        // Если элемент не найден, возвращаем false
-        if (index < 0) return false;
-        // Сдвигаем элементы для заполнения пробела
-        Array.Copy(_items, index + 1, _items, index, _count - index - 1);
-        // Очищаем последний элемент и уменьшаем счетчик
-        _items[--_count] = default(T);
-        return true;
-    }
-
-    // Сортировка элементов массива
-    public void Sort()
-    {
-        Array.Sort(_items, 0, _count);
-    }
-
-    // Получение количества элементов в массиве
-    public int Count()
-    {
-        return _count; // Возвращаем количество элементов, а не длину массива
-    }
-    // Метод для подсчета элементов, удовлетворяющих условию
     public int CountIf(Func<T, bool> predicate)
     {
         int count = 0;
@@ -80,7 +44,7 @@ public class CustomArray<T> : IEnumerable<T>
         }
         return count;
     }
-    // Метод для проверки, удовлетворяет ли хотя бы один элемент условию
+
     public bool Any(Func<T, bool> predicate)
     {
         foreach (T item in _items)
@@ -92,7 +56,7 @@ public class CustomArray<T> : IEnumerable<T>
         }
         return false;
     }
-    // Метод для проверки, удовлетворяют ли все элементы условию
+
     public bool All(Func<T, bool> predicate)
     {
         foreach (T item in _items)
@@ -104,20 +68,20 @@ public class CustomArray<T> : IEnumerable<T>
         }
         return true;
     }
-    // Метод для проверки наличия элемента в массиве
+
+    // Проверяет, содержит ли массив указанный элемент
     public bool Contains(T item)
     {
-        foreach (T currentItem in _items)
+        for (int i = 0; i < _count; i++)
         {
-            if (currentItem.Equals(item))
+            if (_items[i].Equals(item))
             {
-                return true;
+                return true; 
             }
         }
-        return false;
+        return false; 
     }
 
-    // Метод для получения первого элемента, удовлетворяющего условию
     public T Find(Func<T, bool> predicate)
     {
         foreach (T item in _items)
@@ -127,60 +91,102 @@ public class CustomArray<T> : IEnumerable<T>
                 return item;
             }
         }
-        return default(T); // Возвращаем значение по умолчанию, если ничего не найдено
+        return default(T);
     }
 
-    // Метод для применения действия ко всем элементам массива
+    // Применяет указанное действие к каждому элементу массива
     public void ForEach(Action<T> action)
     {
-        foreach (T item in _items)
+        for (int i = 0; i < _count; i++)
         {
-            action(item);
+            action(_items[i]); // Выполняем действие для каждого элемента
         }
     }
 
-    // Переворот массива
+    // Удаляет первое вхождение указанного элемента из массива
+    public bool Remove(T item)
+    {
+        int index = Array.IndexOf(_items, item, 0, _count); // Находим индекс элемента
+        if (index < 0) return false; // Если элемент не найден, возвращаем false
+        Array.Copy(_items, index + 1, _items, index, _count - index - 1); // Сдвигаем элементы
+        _items[--_count] = default(T); // Обнуляем последний элемент
+        return true; // Возвращаем true, указывая, что элемент был удален
+    }
+
+    // Сортирует элементы в массиве
+    public void Sort()
+    {
+        Array.Sort(_items, 0, _count); 
+    }
+
+    // Получение количества элементов в массиве
+    public int Count()
+    {
+        return _count; 
+    }
+
     public void Reverse()
     {
         Array.Reverse(_items, 0, _count);
     }
 
-    // Получение минимального элемента массива
+    // Возвращает минимальный элемент
     public T Min()
     {
-        if (_count == 0) throw new InvalidOperationException("The array is empty.");
-        T min = _items[0];
-        for (int i = 1; i < _count; i++)
+        if (_count == 0)
         {
-            if (((IComparable<T>)_items[i]).CompareTo(min) < 0) min = _items[i];
+            throw new InvalidOperationException("Массив пуст."); 
         }
-        return min;
+        return _items.Take(_count).Min(); 
     }
 
-    // Получение максимального элемента массива
+    // Возвращает максимальный элемент
     public T Max()
     {
-        if (_count == 0) throw new InvalidOperationException("The array is empty.");
-        T max = _items[0];
-        for (int i = 1; i < _count; i++)
+        if (_count == 0)
         {
-            if (((IComparable<T>)_items[i]).CompareTo(max) > 0) max = _items[i];
+            throw new InvalidOperationException("Массив пуст."); 
         }
-        return max;
+        return _items.Take(_count).Max(); 
     }
 
-    // Реализация GetEnumerator
+    public TResult MinByProjection<TResult>(Func<T, TResult> projection) where TResult : IComparable<TResult>
+    {
+        if (_count == 0) throw new InvalidOperationException("The array is empty.");
+        return _items.Take(_count).Select(projection).Min();
+    }
+
+    public TResult MaxByProjection<TResult>(Func<T, TResult> projection) where TResult : IComparable<TResult>
+    {
+        if (_count == 0) throw new InvalidOperationException("The array is empty.");
+        return _items.Take(_count).Select(projection).Max();
+    }
+
+    public IEnumerable<TResult> Project<TResult>(Func<T, TResult> projection)
+    {
+        return _items.Take(_count).Select(projection);
+    }
+
+    public IEnumerable<T> GetRange(int index, int count)
+    {
+        if (index < 0 || index >= _count) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+        if (count < 0) throw new ArgumentOutOfRangeException(nameof(count), "Count cannot be negative.");
+        int actualCount = Math.Min(count, _count - index);
+        return _items.Skip(index).Take(actualCount);
+    }
+
+    // Возвращает перечислитель, выполняющий итерацию по коллекции
     public IEnumerator<T> GetEnumerator()
     {
         for (int i = 0; i < _count; i++)
         {
-            yield return _items[i];
+            yield return _items[i]; 
         }
     }
 
-    // Явная реализация интерфейса IEnumerable
-    IEnumerator IEnumerable.GetEnumerator()
+    // Возвращает перечислитель, который итерирует по коллекции
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
     {
-        return GetEnumerator();
+        return GetEnumerator(); 
     }
 }

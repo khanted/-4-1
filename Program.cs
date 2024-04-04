@@ -1,114 +1,150 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 class Program
 {
-    // Главный метод программы
     static void Main()
     {
-        // Установка кодировки консоли для поддержки Unicode
-        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        Console.OutputEncoding = System.Text.Encoding.UTF8; // Поддержка Unicode в консоли.
 
-        // Предложение пользователю выбрать тип данных для массива
-        Console.WriteLine("Выберите номер типа данных, который нужно применить для массива:");
+        // Предлагаем пользователю выбрать тип данных массива.
+        Console.WriteLine("Выберите номер типа данных для массива:");
         Console.WriteLine("1. int");
         Console.WriteLine("2. double");
         Console.WriteLine("3. string");
         Console.WriteLine("4. bool");
         Console.Write("Ваш выбор: ");
-        string typeChoice = Console.ReadLine(); // Чтение выбора пользователя
+        string typeChoice = Console.ReadLine(); // Чтение выбора пользователя.
 
-        // Запрос размера массива от пользователя
-        Console.Write("Хотите указать размер массива? (да/нет): ");
-        int size = Console.ReadLine().ToLower() == "да" ? AskForArraySize() : 4; // Получение размера массива
+        // Запрашиваем у пользователя размер массива.
+        Console.Write("Укажите размер массива (по умолчанию 4): ");
+        int size = Console.ReadLine().ToLower() == "да" ? AskForArraySize() : 4; // Определение размера массива.
 
-        // Обработка выбора пользователя и создание массива соответствующего типа
+        // Обработка выбора типа данных массива.
         switch (typeChoice)
         {
             case "1":
-                ProcessArray<int>(size);
+                ProcessArray<int>(size); // Работа с массивом int.
                 break;
             case "2":
-                ProcessArray<double>(size);
+                ProcessArray<double>(size); // Работа с массивом double.
                 break;
             case "3":
-                ProcessArray<string>(size);
+                ProcessArray<string>(size); // Работа с массивом string.
                 break;
             case "4":
-                ProcessArray<bool>(size);
+                ProcessArray<bool>(size); // Работа с массивом bool.
                 break;
             default:
-                Console.WriteLine("Неверный выбор. Попробуйте еще раз, выбрав номер от 1 до 4.");
-                break; // Прекращение выполнения программы при неверном выборе
+                Console.WriteLine("Неверный выбор. Выберите номер от 1 до 4."); // Сообщение об ошибке при неправильном выборе.
+                break;
         }
     }
 
-    // Метод для заполнения и обработки массива
-    static void ProcessArray<T>(int size) where T : IComparable<T>
-    {
-        var array = new CustomArray<T>(size); // Создание экземпляра массива
-
-        // Заполнение массива значениями, введенными пользователем
-        Console.WriteLine($"Введите {size} элементов для заполнения массива:");
-        for (int i = 0; i < size; i++)
-        {
-            Console.Write($"Элемент [{i}]: ");
-            array.Add(ReadValue<T>());
-        }
-
-        ShowArrayOperations(array); // Демонстрация операций с массивом
-    }
-
-    // Метод для запроса размера массива у пользователя
     static int AskForArraySize()
     {
         Console.Write("Введите размер массива: ");
-        return int.Parse(Console.ReadLine()); // Возврат введенного размера
-    }
-
-    // Метод для чтения и преобразования введенного значения в тип T
-    static T ReadValue<T>() where T : IComparable<T>
-    {
-        while (true) // Бесконечный цикл для обработки ввода
+        if (int.TryParse(Console.ReadLine(), out int size)) // Попытка конвертации ввода в int.
         {
-            var input = Console.ReadLine();
-            try
-            {
-                // Попытка преобразования ввода в тип T
-                if (typeof(T) == typeof(bool) && bool.TryParse(input, out bool boolValue))
-                {
-                    return (T)(object)boolValue; // Для bool используется TryParse
-                }
-                else
-                {
-                    return (T)Convert.ChangeType(input, typeof(T)); // Для остальных типов используется Convert.ChangeType
-                }
-            }
-            catch (FormatException)
-            {
-                Console.WriteLine("Неверный формат. Пожалуйста, введите значение ещё раз:");
-            }
+            return size; // Возврат размера.
+        }
+        else
+        {
+            Console.WriteLine("Некорректный ввод. Используется размер по умолчанию: 4."); // Сообщение об ошибке.
+            return 4; // Возврат значения по умолчанию.
         }
     }
 
-    // Метод для демонстрации операций с массивом
-    static void ShowArrayOperations<T>(CustomArray<T> array) where T : IComparable<T>
+    static void ProcessArray<T>(int size) where T : IComparable<T>
     {
-        // Вывод исходного содержимого массива
-        Console.WriteLine("\nИсходное содержимое массива:");
-        array.ForEach(item => Console.WriteLine(item));
+         static void PrintItem<T>(T item)
+        {
+            Console.WriteLine(item);
+        }
+
+        static void PrintItemProjection<T>(T item)
+        {
+            ((string)(object)item).Length;
+        }
+
+        static bool FuncForCountIf<T>(T x)
+        {
+            return Convert.ToDouble(x) > 0;
+        }
+        // Создание экземпляра кастомного массива с указанным размером
+        var customArray = new CustomArray<T>(size);
+
+        // Заполнение массива элементами, введенными пользователем
+        for (int i = 0; i < size; i++)
+        {
+            Console.Write($"Введите элемент {i + 1} из {size} (тип {typeof(T).Name}): ");
+            T value = ReadValue<T>();
+            customArray.Add(value);
+        }
+
+        // Демонстрация базовых операций с массивом
+        Console.WriteLine("\nМассив успешно создан.");
+        Console.WriteLine("Элементы массива:");
+        customArray.ForEach(PrintItem);
+
+        // Демонстрация операций поиска минимального и максимального элементов
+        Console.WriteLine($"Минимальный элемент: {customArray.Min()}");
+        Console.WriteLine($"Максимальный элемент: {customArray.Max()}");
+
+        // Пример использования CountIf
+        Console.WriteLine("\nПример использования CountIf (элементы больше нуля):");
+        Console.WriteLine(customArray.CountIf(FuncForCountIf)); // Примечание: это условие работает только для числовых типов
+
+        // Демонстрация базовых операций:
+        Console.WriteLine("\nТестирование дополнительных операций:");
+
+        // Тест Contains
+        Console.WriteLine("Введите элемент для проверки его наличия в массиве:");
+        T searchElement = ReadValue<T>();
+        bool contains = customArray.Contains(searchElement);
+        Console.WriteLine($"Элемент {(contains ? "найден" : "не найден")} в массиве.");
+
+        // Тест Remove
+        Console.WriteLine("Введите элемент для удаления из массива:");
+        T removeElement = ReadValue<T>();
+        bool removed = customArray.Remove(removeElement);
+        Console.WriteLine($"Элемент {(removed ? "был удален" : "не найден для удаления")} из массива.");
+        customArray.ForEach(PrintItem); // Повторный вывод массива для проверки
+
+        if (typeof(T) == typeof(string))
+        {
+            Console.WriteLine("Минимальная длина строки в массиве: " + customArray.MinByProjection(PrintItemProjection));
+            Console.WriteLine("Максимальная длина строки в массиве: " + customArray.MaxByProjection(PrintItemProjection));
+        }
 
         // Сортировка и вывод отсортированного массива
-        array.Sort();
-        Console.WriteLine("\nСодержимое массива после сортировки:");
-        array.ForEach(item => Console.WriteLine(item));
-
-        // Вывод минимального и максимального элементов
-        Console.WriteLine($"\nМинимальный элемент: {array.Min()}");
-        Console.WriteLine($"Максимальный элемент: {array.Max()}");
+        customArray.Sort();
+        Console.WriteLine("\nОтсортированный массив:");
+        customArray.ForEach(PrintItem);
 
         // Переворот и вывод перевернутого массива
-        array.Reverse();
-        Console.WriteLine("\nМассив после переворота:");
-        array.ForEach(item => Console.WriteLine(item));
+        customArray.Reverse();
+        Console.WriteLine("\nПеревернутый массив:");
+        customArray.ForEach(PrintItem);
+    }
+    
+    // Метод для чтения и конвертации введенного значения в тип T
+    static T ReadValue<T>()
+    {
+        while (true)
+        {
+            string input = Console.ReadLine(); // Чтение строки из консоли.
+            try
+            {
+                return (T)Convert.ChangeType(input, typeof(T)); // Попытка конвертации ввода в нужный тип.
+            }
+            catch
+            {
+                Console.Write("Некорректный ввод. Пожалуйста, введите значение еще раз: "); // Сообщение об ошибке.
+            }
+        }
     }
 }
